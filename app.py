@@ -26,7 +26,7 @@ st.markdown(
 uploaded = st.file_uploader("1. Upload the audience-insights workbook", type=["xlsx"], help="Use the final frequency-report workbook.")
 
 if uploaded is None:
-    st.info("Upload an `.xlsx` research report to begin. Reach will always be created as **X** for manual HubSpot entry.")
+    st.info("Upload an `.xlsx` research report to begin. You can enter the HubSpot audience reach before generating the deck.")
     st.stop()
 
 try:
@@ -46,6 +46,13 @@ with left:
     company_name = st.text_input("2. Advertiser/company name", placeholder="e.g., Kennametal")
 with right:
     report_year = st.number_input("Research report year", min_value=2024, max_value=2100, value=2026, step=1)
+
+reach = st.text_input(
+    "HubSpot audience reach",
+    placeholder="e.g., 35K+ or 12,500",
+    help="Enter the total matching audience reach pulled from HubSpot. This appears in the Reach box on slide 1.",
+    max_chars=20,
+)
 
 st.subheader("3. Define the target audience")
 qualified_tab, industry_tab, purchase_tab = st.tabs(["Qualified audience", "Industry audience", "Purchase focus"])
@@ -93,14 +100,14 @@ with purchase_tab:
     purchase_profile = st.selectbox("What does this advertiser sell?", list(PURCHASE_PROFILES))
     st.caption("This selection controls the slide-two headline and platform chart. The purchase-category comparison remains consistent.")
 
-st.subheader("4. Review fixed fields")
+st.subheader("4. Review headline fields")
 fixed_a, fixed_b = st.columns(2)
-fixed_a.metric("Reach", "X", help="Filled manually from HubSpot after download.")
+fixed_a.metric("Reach", reach.strip() or "—", help="Uses the HubSpot audience reach entered above.")
 fixed_b.metric("Decision-Makers", f"{fixed_decision:.0%}", help="Always uses purchase influence net / Total.")
 
-ready = bool(company_name.strip() and qualified_description.strip() and industry_description.strip())
+ready = bool(company_name.strip() and reach.strip() and qualified_description.strip() and industry_description.strip())
 if not ready:
-    st.warning("Enter the company name and both audience descriptions to enable generation.")
+    st.warning("Enter the company name, HubSpot reach, and both audience descriptions to enable generation.")
 
 if st.button("Generate PowerPoint", type="primary", disabled=not ready, use_container_width=True):
     try:
@@ -109,6 +116,7 @@ if st.button("Generate PowerPoint", type="primary", disabled=not ready, use_cont
             template_bytes=template,
             rows=rows,
             company_name=company_name.strip(),
+            reach=reach.strip(),
             report_year=int(report_year),
             qualified_value=qualified_value,
             qualified_description=qualified_description.strip(),
@@ -134,4 +142,4 @@ if "generated_deck" in st.session_state:
         use_container_width=True,
     )
 
-st.caption("Research metrics come from the uploaded workbook. Reach is intentionally left as X for manual HubSpot entry.")
+st.caption("Research metrics come from the uploaded workbook. Reach comes from the HubSpot value entered above.")

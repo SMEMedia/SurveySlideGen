@@ -62,6 +62,7 @@ class GeneratorTests(unittest.TestCase):
             template_bytes=template,
             rows=rows,
             company_name="Example Co",
+            reach="42K+",
             report_year=2026,
             qualified_value=.43,
             qualified_description="Hold manufacturing leadership and engineering roles",
@@ -73,7 +74,7 @@ class GeneratorTests(unittest.TestCase):
         with zipfile.ZipFile(io.BytesIO(result)) as archive:
             slide1 = archive.read("ppt/slides/slide1.xml").decode("utf-8")
             self.assertIn("Example Co", slide1)
-            self.assertIn(">X<", slide1)
+            self.assertIn(">42K+<", slide1)
             self.assertIn("ppt/charts/chart1.xml", archive.namelist())
 
     def test_all_purchase_profiles_generate(self):
@@ -85,6 +86,7 @@ class GeneratorTests(unittest.TestCase):
                     template_bytes=template,
                     rows=rows,
                     company_name="Example Co",
+                    reach="42K+",
                     report_year=2026,
                     qualified_value=.43,
                     qualified_description="Hold manufacturing leadership and engineering roles",

@@ -12,7 +12,7 @@ A user-friendly Streamlit application that converts the SME audience-insights fr
 - Audience descriptions
 - Purchase focus: Machine Tools, Manufacturing Software, Robotics/Automation, or Machine Tools + Automation
 
-Reach is always written as `X` for manual HubSpot entry. Decision-Makers is always calculated from `purchase influence net / Total` and cannot be changed in the interface.
+Reach is entered in the form using the audience total pulled from HubSpot. Decision-Makers is always calculated from `purchase influence net / Total` and cannot be changed in the interface.
 
 ## Run locally
 

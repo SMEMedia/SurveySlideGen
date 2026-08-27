@@ -247,6 +247,7 @@ def generate_presentation(
     template_bytes: bytes,
     rows: list[list[object]],
     company_name: str,
+    reach: str,
     report_year: int,
     qualified_value: float,
     qualified_description: str,
@@ -274,7 +275,7 @@ def generate_presentation(
     _replace_across_nodes(slide1, "Kennametal", company_name)
     _replace_across_nodes(slide1, "Kennametal", company_name)
     _replace_across_nodes(slide1, "Kennametal", company_name)
-    _replace_across_nodes(slide1, "35K+", "X")
+    _replace_across_nodes(slide1, "35K+", reach)
     _replace_across_nodes(slide1, "2 in 5", _ratio(qualified_value, qualified_denominator))
     _replace_across_nodes(slide1, "43%", _percent(qualified_value))
     _replace_across_nodes(slide1, "Hold Manufacturing Engineering, Production, or C-Suite Leadership Roles at their Organization", qualified_description)
