@@ -97,6 +97,26 @@ class GeneratorTests(unittest.TestCase):
                 )
                 self.assertGreater(len(result), 100_000)
 
+    def test_any_q12_choice_can_drive_slide_two(self):
+        rows = read_rows(fixture_workbook_bytes())
+        template = Path("assets/sme_audience_template.pptx").read_bytes()
+        result = generate_presentation(
+            template_bytes=template,
+            rows=rows,
+            company_name="Example Co",
+            reach="42K+",
+            report_year=2026,
+            qualified_value=.43,
+            qualified_description="Hold manufacturing leadership and engineering roles",
+            qualified_denominator=5,
+            industry_value=.75,
+            industry_description="Work across target manufacturing industries",
+            purchase_profile_name="Consulting",
+        )
+        with zipfile.ZipFile(io.BytesIO(result)) as archive:
+            slide2 = archive.read("ppt/slides/slide2.xml").decode("utf-8")
+            self.assertIn("Consulting Buyers", slide2)
+
 
 if __name__ == "__main__":
     unittest.main()

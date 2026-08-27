@@ -242,6 +242,21 @@ def _ratio(value: float, denominator: int) -> str:
     return f"{max(1, round(value * denominator))} in {denominator}"
 
 
+def _purchase_profile(name: str) -> dict[str, object]:
+    if name in PURCHASE_PROFILES:
+        return PURCHASE_PROFILES[name]
+    display_name = name.replace(" / ", "/")
+    return {
+        "row_label": name,
+        "replacements": [
+            ("Machine Tool Buyers", f"{display_name} Buyers"),
+            ("Machine Tools is the Top Purchase", f"{display_name} is a Top Purchase"),
+            ("Machine Tool Decision-Makers", f"{display_name} Decision-Makers"),
+            ("Machine Tool Purchases", f"{display_name} Purchases"),
+        ],
+    }
+
+
 def generate_presentation(
     *,
     template_bytes: bytes,
@@ -256,7 +271,7 @@ def generate_presentation(
     industry_description: str,
     purchase_profile_name: str,
 ) -> bytes:
-    profile = PURCHASE_PROFILES[purchase_profile_name]
+    profile = _purchase_profile(purchase_profile_name)
     purchase_options = discover_metric_options(rows, "Which types of products/services do you influence or purchase?")
     decision_options = discover_metric_options(rows, "What is your role in purchasing decisions?")
     decision_value = metric_value(decision_options, "purchase influence net", "Total")
