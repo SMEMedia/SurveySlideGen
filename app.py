@@ -4,7 +4,23 @@ from pathlib import Path
 
 import streamlit as st
 
-from generator import discover_metric_options, generate_presentation, metric_value, read_rows
+from generator import discover_metric_options, exclusive_or_value, generate_presentation, metric_value, read_rows
+
+
+def selection_description(prefix: str, labels: list[str], limit: int = 180) -> str:
+    selected: list[str] = []
+    for label in labels:
+        candidate = prefix + ", ".join([*selected, label])
+        if len(candidate) > limit:
+            break
+        selected.append(label)
+    remaining = len(labels) - len(selected)
+    suffix = f", and {remaining} more" if remaining else ""
+    while selected and len(prefix + ", ".join(selected) + suffix) > limit:
+        selected.pop()
+        remaining += 1
+        suffix = f", and {remaining} more"
+    return prefix + ", ".join(selected) + suffix if labels else ""
 
 
 st.set_page_config(page_title="SME Audience Slide Generator", page_icon="📊", layout="wide")
@@ -56,38 +72,61 @@ with right:
     report_year = st.number_input("Research report year", min_value=2024, max_value=2100, value=2026, step=1)
 
 st.subheader("Slide 1 — Target audience")
-st.caption("Choose the precomputed OR-net rows matching the advertiser's target. Slide 1 always uses the Total column.")
+st.caption("Select every requested job function and industry. The app uses OR logic and never adds overlapping industry percentages.")
 
-qualified_nets = [
-    option.label
-    for option in qualified_options
-    if "net" in option.label.lower() or "+" in option.label or option.label.lower() in {"advantive", "ssab"}
-]
-if not qualified_nets:
-    qualified_nets = [option.label for option in qualified_options]
-industry_nets = [option.label for option in industry_options if "net" in option.label.lower() or option.label.lower() == "ssab"]
-if not industry_nets:
-    industry_nets = [option.label for option in industry_options]
+qualified_labels = [option.label for option in qualified_options]
+industry_labels = [option.label for option in industry_options if option.label.lower() != "ssab"]
 
 target_left, target_right = st.columns(2)
 with target_left:
-    qualified_label = st.selectbox("Q14 — Job function OR-net", qualified_nets)
-    qualified_value = metric_value(qualified_options, qualified_label, "Total")
+    selected_job_functions = st.multiselect(
+        "Q14 — Job functions",
+        qualified_labels,
+        default=["leadership + purchasing"] if "leadership + purchasing" in qualified_labels else [],
+        help="Individual job functions may be combined. Engineering NET, Production NET, leadership + purchasing, advantive, and SSAB must each be selected alone because they overlap other rows.",
+    )
+    try:
+        qualified_value = exclusive_or_value(qualified_options, selected_job_functions, "Total")
+        qualified_error = ""
+    except ValueError as exc:
+        qualified_value = 0.0
+        qualified_error = str(exc)
+        st.error(qualified_error)
+    qualified_default = selection_description("Hold roles across ", selected_job_functions)
     qualified_description = st.text_area(
         "Job-function description for the slide",
-        "Hold Manufacturing Engineering, Production, or C-Suite Leadership Roles at their Organization",
+        qualified_default,
         max_chars=180,
+        key="qualified_description:" + "|".join(selected_job_functions),
+        help="The wording follows the selected answers and can be shortened or polished before generation.",
     )
     qualified_denominator = st.selectbox("Display the result as", [5, 10], format_func=lambda value: f"Nearest ‘in {value}’ ratio")
     st.metric("Qualified audience", f"{qualified_value:.0%}")
 
 with target_right:
-    industry_label = st.selectbox("Q13 — Industry OR-net", industry_nets)
-    industry_value = metric_value(industry_options, industry_label, "Total")
+    selected_industries = st.multiselect("Q13 — Industries", industry_labels)
+    if len(selected_industries) == 1:
+        industry_value = metric_value(industry_options, selected_industries[0], "Total")
+        st.caption("A single industry uses its Total percentage directly.")
+    elif len(selected_industries) > 1:
+        industry_value = st.number_input(
+            "Verified deduplicated OR-net percentage",
+            min_value=0,
+            max_value=100,
+            value=69,
+            step=1,
+            help="Enter the union/net result from the survey system or respondent-level data. Marginal industry percentages cannot be added without double-counting respondents.",
+        ) / 100
+    else:
+        industry_value = 0.0
+        st.info("Select at least one industry.")
+    industry_default = selection_description("Work across ", selected_industries)
     industry_description = st.text_area(
         "Industry description for the slide",
-        "Work across Aerospace & Defense, Automotive, Industrial Machinery & Equipment, Medical Device, & Job Shops",
+        industry_default,
         max_chars=180,
+        key="industry_description:" + "|".join(selected_industries),
+        help="The wording follows the selected industries and can be shortened or polished before generation.",
     )
     st.metric("Industry audience", f"{industry_value:.0%}")
 
@@ -104,7 +143,15 @@ review_a, review_b = st.columns(2)
 review_a.metric("Reach", reach.strip() or "—", help="From the HubSpot audience segment.")
 review_b.metric("Decision-Makers", f"{fixed_decision:.0%}", help="Fixed from Q10 purchase influence net / Total.")
 
-ready = bool(company_name.strip() and reach.strip() and qualified_description.strip() and industry_description.strip())
+ready = bool(
+    company_name.strip()
+    and reach.strip()
+    and selected_job_functions
+    and not qualified_error
+    and selected_industries
+    and qualified_description.strip()
+    and industry_description.strip()
+)
 if not ready:
     st.warning("Enter the company name, HubSpot reach, and both audience descriptions to enable generation.")
 

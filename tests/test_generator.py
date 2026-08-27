@@ -5,7 +5,7 @@ import unittest
 
 from openpyxl import Workbook
 
-from generator import PURCHASE_PROFILES, discover_metric_options, generate_presentation, metric_value, read_rows
+from generator import PURCHASE_PROFILES, discover_metric_options, exclusive_or_value, generate_presentation, metric_value, read_rows
 
 
 def fixture_workbook_bytes():
@@ -41,6 +41,8 @@ def fixture_workbook_bytes():
         ["Which of the following best describes your job title or primary function? (Please choose the option that best applies to you)"],
         ["Number", "Choice", None, "Total", "Total Magazine Audience"],
         ["(Net)", "leadership + purchasing", "Frequency", .43, .49],
+        [1, "Manufacturing Production Management", "Frequency", .08, .09],
+        [2, "Manufacturing Engineering Management", "Frequency", .12, .13],
     ]
     for row in rows:
         ws.append(row)
@@ -54,6 +56,22 @@ class GeneratorTests(unittest.TestCase):
         rows = read_rows(fixture_workbook_bytes())
         options = discover_metric_options(rows, "What is your role in purchasing decisions?")
         self.assertEqual(metric_value(options, "purchase influence net", "Total"), .815)
+
+    def test_q14_individual_choices_use_exclusive_or(self):
+        rows = read_rows(fixture_workbook_bytes())
+        options = discover_metric_options(rows, "Which of the following best describes your job title or primary function?")
+        value = exclusive_or_value(
+            options,
+            ["Manufacturing Production Management", "Manufacturing Engineering Management"],
+            "Total",
+        )
+        self.assertAlmostEqual(value, .20)
+
+    def test_q14_net_cannot_be_combined_with_another_row(self):
+        rows = read_rows(fixture_workbook_bytes())
+        options = discover_metric_options(rows, "Which of the following best describes your job title or primary function?")
+        with self.assertRaisesRegex(ValueError, "must be selected by itself"):
+            exclusive_or_value(options, ["leadership + purchasing", "Engineering NET"], "Total")
 
     def test_generates_downloadable_pptx(self):
         rows = read_rows(fixture_workbook_bytes())

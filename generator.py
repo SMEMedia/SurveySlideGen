@@ -58,6 +58,14 @@ PURCHASE_PROFILES = {
     },
 }
 
+Q14_AGGREGATE_ROWS = {
+    "engineering net",
+    "production net",
+    "leadership + purchasing",
+    "advantive",
+    "ssab",
+}
+
 
 @dataclass(frozen=True)
 class MetricOption:
@@ -116,6 +124,16 @@ def metric_value(options: list[MetricOption], label: str, column: str = "Total")
     if column not in match.values:
         raise ValueError(f"Could not find workbook column ‘{column}’ for ‘{label}’.")
     return match.values[column]
+
+
+def exclusive_or_value(options: list[MetricOption], labels: list[str], column: str = "Total") -> float:
+    """Combine mutually exclusive response choices without double-counting."""
+    if not labels:
+        raise ValueError("Select at least one response choice.")
+    aggregate_labels = [label for label in labels if _norm(label) in Q14_AGGREGATE_ROWS]
+    if aggregate_labels and len(labels) > 1:
+        raise ValueError("A Q14 aggregate/net row must be selected by itself because it overlaps its component job functions.")
+    return sum(metric_value(options, label, column) for label in labels)
 
 
 def _replace_across_nodes(root: ET.Element, old: str, new: str, required: bool = True) -> bool:

@@ -15,12 +15,12 @@ A user-friendly Streamlit application that converts the SME audience-insights fr
 The form follows the research workflow directly:
 
 - HubSpot supplies the Reach field.
-- Q14 supplies the qualified job-function OR-net on slide 1.
-- Q13 supplies the industry OR-net on slide 1.
+- Q14 job functions are multi-select. Individual mutually exclusive roles are combined with OR logic; overlapping aggregate/net rows must be selected alone.
+- Q13 industries are multi-select. One industry uses its Total value; multiple industries require a verified deduplicated OR-net from respondent-level data or the survey system.
 - Q10 supplies the fixed Decision-Makers result.
 - Q12 supplies both charts on slide 2.
 
-The uploaded workbook is a frequency report, so arbitrary OR-nets cannot be calculated from individual answer percentages. The app lists the valid precomputed Q13 and Q14 net rows already included in the workbook. Decision-Makers is always calculated from `purchase influence net / Total` and cannot be changed in the interface.
+The uploaded workbook is a frequency report. Because respondents can choose multiple industries, arbitrary Q13 OR-nets cannot be calculated by adding the displayed marginal percentages. The interface explicitly requests the verified union when multiple industries are selected, preventing duplicated respondents. Decision-Makers is always calculated from `purchase influence net / Total` and cannot be changed in the interface.
 
 ## Run locally
 
