@@ -1,41 +1,71 @@
 # SME Audience Slide Generator
 
-A user-friendly Streamlit application that converts the SME audience-insights frequency report into a branded two-slide advertiser presentation.
+This application converts an SME audience-insights frequency report into a branded two-slide advertiser presentation.
 
-## What users configure
+## Important links
 
-- Audience-insights `.xlsx` workbook
-- Advertiser/company name
-- Report year
-- Qualified-audience net or verified percentage
-- Industry-audience net or verified percentage
-- Audience descriptions
-- Purchase focus: Machine Tools, Manufacturing Software, Robotics/Automation, or Machine Tools + Automation
+- [Open the slide generator](https://surveyslidegenerator.streamlit.app/)
+- [SMEMedia repository](https://github.com/SMEMedia/SurveySlideGen)
 
-The form follows the research workflow directly:
+## Create a presentation
 
-- HubSpot supplies the Reach field.
-- Q14 job functions are multi-select. Individual mutually exclusive roles are combined with OR logic; overlapping aggregate/net rows must be selected alone.
-- Q13 industries are multi-select. One industry uses its Total value; multiple industries require a verified deduplicated OR-net from respondent-level data or the survey system.
-- Q10 supplies the fixed Decision-Makers result.
-- Q12 supplies both charts on slide 2.
+1. Open the slide generator.
+2. Upload the audience-insights workbook in .xlsx format.
+3. Enter the advertiser or company name and report year.
+4. Enter the qualified-audience and industry-audience percentages requested by the form.
+5. Choose the purchase focus.
+6. Review the audience descriptions and calculated results.
+7. Generate and download the presentation.
+8. Open the downloaded slides and verify the company name, year, percentages, labels, and charts before sharing.
 
-The uploaded workbook is a frequency report. Because respondents can choose multiple industries, arbitrary Q13 OR-nets cannot be calculated by adding the displayed marginal percentages. The interface explicitly requests the verified union when multiple industries are selected, preventing duplicated respondents. Decision-Makers is always calculated from `purchase influence net / Total` and cannot be changed in the interface.
+## How survey values are used
 
-## Run locally
+- **HubSpot** supplies Reach.
+- **Q14 job functions:** combine mutually exclusive roles using OR logic. Do not combine an aggregate/net row with its component roles.
+- **Q13 industries:** use the Total value for one industry. For multiple industries, use a verified deduplicated OR-net from respondent-level data or the survey system.
+- **Q10** supplies the fixed Decision-Makers result.
+- **Q12** supplies both charts on slide 2.
 
-```powershell
-python -m pip install -r requirements.txt
-python -m streamlit run app.py
-```
+Adding displayed Q13 percentages together can count the same respondent more than once. Use a verified union whenever multiple industries are selected.
 
-## Deploy on Streamlit Community Cloud
+## Troubleshooting
 
-1. Push this repository to GitHub.
-2. In Streamlit Community Cloud, create an app from the repository.
-3. Set the entry point to `app.py`.
-4. Deploy. No secrets are required.
+### The workbook is rejected
 
-## Data behavior
+- Confirm it is an .xlsx audience-insights frequency report.
+- Make sure the file opens normally in Excel and is not password protected.
+- Download a fresh copy of the report and try again.
+- If the error continues, send the report name and a screenshot of the message to the research support contact. Do not attach confidential respondent-level data to an open GitHub issue.
 
-The app searches by question, response, and audience-column labels—not fixed row numbers. This makes it resilient to row movement in refreshed frequency reports. Company-specific custom nets can be selected when present; otherwise, the user can enter a verified percentage.
+### A question or response cannot be found
+
+- Confirm the workbook contains Q10, Q12, Q13, and Q14.
+- Check whether question or response labels were renamed in the new report.
+- Confirm the correct audience column was selected.
+- Escalate label changes to the technical owner so the matching rules can be reviewed.
+
+### A percentage looks too high
+
+- Do not add overlapping net and component rows.
+- For multiple Q13 industries, confirm the value is a deduplicated OR-net.
+- Verify whether the form expects a percentage or a whole-number count.
+
+### The presentation will not generate or download
+
+- Review the form for missing required fields.
+- Refresh the page and upload the workbook again.
+- Try a shorter advertiser name if text is unusually long.
+- If the issue continues, capture the visible message and contact support.
+
+### The downloaded slides need adjustment
+
+- Confirm all inputs before regenerating.
+- Minor text wrapping can be corrected in the downloaded presentation.
+- Do not manually change calculated research values without confirming them against the source report.
+
+## Ongoing maintenance
+
+- Use the newest approved audience-insights workbook.
+- Verify every generated presentation before external use.
+- Keep the source workbook and any respondent-level information in approved SME storage.
+- Escalate report-format changes or calculation questions to the research and technical owners.
